@@ -9,11 +9,11 @@ public class Test {
 		JFrame fenetre = new JFrame("Fenetre de test");
 
 		// Creation de composants.
+		TextArea textArea = new TextArea("Vide");
 		Button button1 = new Button("Bouton sans couleur ");
 		Button button2 = new Button("Bouton rouge", Color.RED);
 		Button button3 = new Button("Bouton bleu", Color.BLUE, Color.WHITE);
 		Button button4 = new Button("Bouton vert", Color.GREEN, Color.BLACK, Color.YELLOW);
-		TextArea textArea = new TextArea("Vide");
 
 		// ajout des composants a la fenetre.
 		fenetre.setLayout(new GridLayout(5, 1));
