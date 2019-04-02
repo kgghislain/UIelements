@@ -1,8 +1,19 @@
 import javax.swing.JTextPane;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
+
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
+
+import javax.swing.text.BadLocationException;
+
 
 import java.awt.Color;
 import java.awt.event.FocusListener;
@@ -15,61 +26,67 @@ public class TextArea extends JTextPane {
 	private Style addressingModeStyle;
 	private Style standardStyle;
 
-	public TextArea(String text) {
+	private StyledDocument doc;
+
+	private Style[] styles;
+	private String[] keyWords;
+
+	public TextArea(String text, Color[] colors, String[] keyWords) {
 		super();
+
+		// On fixe les attributs passes en parametre.
 		this.setText(text);
-		//this.setLineWrap​(true);
-		this.setSelectedTextColor(Color.YELLOW);
-		this.setSelectionColor(Color.GREEN);
-		this.setForeground(Color.BLUE);
+		this.keyWords = keyWords;
+		this.styles = new Style[colors.length];
+		for(int l=0; l<colors.length; l++) { // On creer des Styles à partir des couleurs fournies.
+			this.styles[l] = this.addStyle("style "+l, null);
+			StyleConstants.setForeground(this.styles[l], colors[l]);
+		}
 
-		// CARET
-		this.getCaret().setBlinkRate(30);
-		this.setCaretColor(Color.RED);
-		
-		this.instructionStyle = this.addStyle("code 1", null);  // On y rajoute un style (qui est retourné par la methode).
-		StyleConstants.setForeground(this.instructionStyle, Color.ORANGE);
-		this.argumentStyle = this.addStyle("code 1", null);  // On y rajoute un style (qui est retourné par la methode).
-		StyleConstants.setForeground(this.argumentStyle, Color.BLUE);
-		this.addressingModeStyle = this.addStyle("code 1", null);  // On y rajoute un style (qui est retourné par la methode).
-		StyleConstants.setForeground(this.addressingModeStyle, Color.GREEN);
-		this.standardStyle = this.addStyle("code 1", null);  // On y rajoute un style (qui est retourné par la methode).
-		StyleConstants.setForeground(this.standardStyle, Color.BLACK);
+		// On recupere le Document du TextArea.
+		doc = this.getStyledDocument();
 
-		this.addFocusListener(new FocusListener(){
-			public void focusGained(FocusEvent event) {
-				System.out.println("ffffffffffffffffff");
-				TextArea.this.setDocument(getColoredDoc());
+		// On fixe les couleurs pour :
+		this.setSelectedTextColor(Color.YELLOW); // le texte selectionne.
+		this.setSelectionColor(Color.GREEN); // la zone selectionne.
+		this.setForeground(Color.BLACK); // coleur du texte.
+		this.getCaret().setBlinkRate(3); // le scintillement du caret.
+		this.setCaretColor(Color.RED); // le caret.
+
+		this.doc = this.getStyledDocument();
+		doc.addDocumentListener(new DocumentListener() {
+			public void changedUpdate(DocumentEvent event) { }
+			public void insertUpdate(DocumentEvent event) {
+
+				for(int i=0; i<doc.getLength(); i++) {
+					Element paragraph = doc.getParagraphElement(i);
+					int start = paragraph.getStartOffset();
+					int end = paragraph.getEndOffset();
+					int[] indexKeyWords = new int[TextArea.this.keyWords.length];
+					String paragraphText = "";
+					try {
+						paragraphText = doc.getText(start, end-start);
+						for(int k=0; k<TextArea.this.keyWords.length; k++) {
+							indexKeyWords[k] = paragraphText.indexOf(keyWords[k]);
+						}
+					} catch (Exception e){}
+
+					for(int j=0; j<indexKeyWords.length; j++) {
+						int[] j_Aux = new int[1];
+						if(indexKeyWords[j]>=0){
+								SwingUtilities.invokeLater(new Runnable(){
+				                public void run(){
+				                        doc.setCharacterAttributes(indexKeyWords[j_Aux[0]]+start, 3, TextArea.this.styles[j_Aux[0]], true);
+				                }
+				            });
+						}
+					}
+				}
 			}
-			public void focusLost(FocusEvent event) {
-				System.out.println("tttttttttttttttttt");
-				TextArea.this.setDocument(getColoredDoc());
-			}
+			public void removeUpdate(DocumentEvent event) { }
 		});
 	}
 	public TextArea() {
-		this("");
-	}
-
-	private StyledDocument getColoredDoc() {
-		StyledDocument res = (new JTextPane()).getStyledDocument();
-		StyledDocument doc = this.getStyledDocument();
-		try {
-			String text = doc.getText(0, doc.getLength());
-			String[] mots = text.split(" ");
-			for(int i =0; i<mots.length; i++) {
-				Style style;
-				if(mots[i].equals("MOV")) {
-					style = TextArea.this.instructionStyle;
-				}
-				else {
-					style = TextArea.this.standardStyle;
-				}
-				res.insertString(res.getLength(), " "+mots[i], style);
-			}
-		} catch(Exception e) {
-			System.out.println(e.getMessage());
-		}
-		return res;
+		this("", null, null);
 	}
 }
