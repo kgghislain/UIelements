@@ -19,6 +19,8 @@ import java.awt.Color;
 import java.awt.event.FocusListener;
 import java.awt.event.FocusEvent;
 
+import java.util.Scanner;
+
 public class TextArea extends JTextPane {
 
 	private Style instructionStyle;
@@ -42,6 +44,8 @@ public class TextArea extends JTextPane {
 			this.styles[l] = this.addStyle("style "+l, null);
 			StyleConstants.setForeground(this.styles[l], colors[l]);
 		}
+		this.standardStyle = this.addStyle("standard style", null);
+		StyleConstants.setForeground(this.standardStyle, Color.BLACK);
 
 		// On recupere le Document du TextArea.
 		doc = this.getStyledDocument();
@@ -55,35 +59,56 @@ public class TextArea extends JTextPane {
 
 		this.doc = this.getStyledDocument();
 		doc.addDocumentListener(new DocumentListener() {
+			
 			public void changedUpdate(DocumentEvent event) { }
+			
 			public void insertUpdate(DocumentEvent event) {
+				TextArea.this.setForeground(Color.BLACK);
+				SwingUtilities.invokeLater(new Runnable(){
+	                public void run(){
+	                        doc.setCharacterAttributes(0, doc.getLength(), TextArea.this.standardStyle, true);
+	                }
+	            });
 
-				for(int i=0; i<doc.getLength(); i++) {
-					Element paragraph = doc.getParagraphElement(i);
-					int start = paragraph.getStartOffset();
-					int end = paragraph.getEndOffset();
-					int[] indexKeyWords = new int[TextArea.this.keyWords.length];
-					String paragraphText = "";
-					try {
-						paragraphText = doc.getText(start, end-start);
-						for(int k=0; k<TextArea.this.keyWords.length; k++) {
-							indexKeyWords[k] = paragraphText.indexOf(keyWords[k]);
+				String text = "";
+				System.out.println("\n\nLECTURE\n");
+				try {
+					text = doc.getText(0, doc.getLength());
+					Scanner scan = new Scanner(text);
+					int[] indexCurrentWord = new int[1];
+					indexCurrentWord[0] = 0;
+					SwingUtilities.invokeLater(new Runnable(){
+		                public void run(){
+					        while(scan.hasNext()) {
+								String word = scan.next();
+								System.out.println("Current Word: "+word+" index: "+indexCurrentWord[0]);
+								boolean notKeyWord = true;
+								for(int j=0; j<TextArea.this.keyWords.length; j++) {
+									int[] j_Aux = new int[1];
+									j_Aux[0] = j;
+									if(word.equals(TextArea.this.keyWords[j_Aux[0]])) {										
+				                		System.out.printf("Caractères %s ||  index: %d | taille: %d | style; %s\n", word, indexCurrentWord[0],
+				                        	TextArea.this.keyWords[j_Aux[0]].length(),
+				                        	TextArea.this.styles[j_Aux[0]].getName());
+				                        doc.setCharacterAttributes(
+				                        	indexCurrentWord[0],
+				                        	TextArea.this.keyWords[j_Aux[0]].length(),
+				                        	TextArea.this.styles[j_Aux[0]],
+				                        	true
+				                        );
+				               		}
+						            
+						            notKeyWord = false;
+								}
+								indexCurrentWord[0] += word.length()+1;
+							}
 						}
-					} catch (Exception e){}
-
-					for(int j=0; j<indexKeyWords.length; j++) {
-						int[] j_Aux = new int[1];
-						if(indexKeyWords[j]>=0){
-								SwingUtilities.invokeLater(new Runnable(){
-				                public void run(){
-				                        doc.setCharacterAttributes(indexKeyWords[j_Aux[0]]+start, 3, TextArea.this.styles[j_Aux[0]], true);
-				                }
-				            });
-						}
-					}
-				}
+					});
+				} catch (Exception e){}
 			}
+			
 			public void removeUpdate(DocumentEvent event) { }
+
 		});
 	}
 	public TextArea() {

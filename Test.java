@@ -13,15 +13,15 @@ public class Test {
 		Color[] colors = new Color[5];
 		String[] keyWords = new String[5];
 		colors[0] = Color.RED;
-		keyWords[0] = "MOV ";
+		keyWords[0] = "MOV";
 		colors[1] = Color.RED;
-		keyWords[1] = "JMP ";
+		keyWords[1] = "JMP";
 		colors[2] = Color.RED;
-		keyWords[2] = "ADD ";
+		keyWords[2] = "ADD";
 		colors[3] = Color.YELLOW;
-		keyWords[3] = " @";
+		keyWords[3] = "@";
 		colors[4] = Color.YELLOW;
-		keyWords[4] = " #";
+		keyWords[4] = "#";
 
 		TextArea textArea = new TextArea("", colors, keyWords);
 		JScrollPane scrollPane = new JScrollPane();
